@@ -5,7 +5,7 @@ import { Check, Building2, Loader2, CreditCard, ShieldCheck, Sparkles, AlertCirc
 import { motion } from "framer-motion";
 import { getSubscriptionPlans, subscribeClinicToPlan, getClinicSubscription } from "@/services/api";
 import useUser from "@/app/hooks/useUser";
-import Loader from "@/components/ui/Loader"; // NEW SHARED IMPORT
+import Loader from "@/components/ui/Loader";
 
 export default function AdminBillingPage() {
   const { user } = useUser() as any;

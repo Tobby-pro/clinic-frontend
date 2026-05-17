@@ -1,8 +1,15 @@
-// dashboard/appointments/create/page.tsx
+// app/dashboard/appointments/create/page.tsx
+
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
+
 import AppointmentForm from "@/components/dashboard/AppointmentForm";
+
+function AppointmentFormWrapper() {
+  return <AppointmentForm />;
+}
 
 export default function CreateAppointmentPage() {
   return (
@@ -22,7 +29,17 @@ export default function CreateAppointmentPage() {
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow-md">
-        <AppointmentForm />
+
+        <Suspense
+          fallback={
+            <div className="py-10 text-center text-sm text-gray-500">
+              Loading appointment form...
+            </div>
+          }
+        >
+          <AppointmentFormWrapper />
+        </Suspense>
+
       </div>
 
     </div>
