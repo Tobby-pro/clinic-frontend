@@ -90,7 +90,7 @@ export default function SolutionsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-5xl md:text-5xl font-extrabold text-indigo-950 tracking-tight leading-[1.1] mb-6"
+                className="text-[40px] md:text-5xl font-extrabold text-indigo-950 tracking-tight leading-[1.1] mb-6"
               >
                 Built for the <span className="text-[#ff7600]">Modern</span>
                 <br />

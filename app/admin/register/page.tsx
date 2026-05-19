@@ -1,4 +1,5 @@
 // app/(auth)/register/page.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -19,7 +20,7 @@ const poppins = Poppins({
 });
 
 const registerSchema = z.object({
-  clinicName: z.string().min(3, "Clinic name too short"),
+  clinicName: z.string().min(3, "Facility name too short"),
   adminName: z.string().min(2, "Full name is required"),
   email: z.string().email("Invalid work email"),
   pin: z.string().length(6, "PIN must be exactly 6 digits").regex(/^\d+$/, "PIN must be numeric"),
@@ -125,16 +126,16 @@ export default function RegisterPage() {
             {step === 1 && (
               <motion.div key="s1" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-8">
                 <div className="text-left">
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Clinic Entity</h1>
-                  <p className="text-xs text-slate-400 font-medium mt-1">Locate your seeded workspace in the NHN registry.</p>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Healthcare Facility</h1>
+                  <p className="text-xs text-slate-400 font-medium mt-1">Verify and link your practice.</p>
                 </div>
                 <div className="relative">
                   <div className="relative">
                       <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                       <input
                           type="text"
-                          placeholder="Search clinic name..."
-                          className="w-full bg-slate-50 border border-slate-100 focus:border-[#ff7600] focus:bg-white focus:ring-4 focus:ring-orange-50 rounded-2xl py-5 pl-14 pr-6 text-sm font-medium outline-none transition-all"
+                          placeholder="Enter hospital or facility name..."
+                          className="w-full bg-slate-50 border border-slate-100 focus:border-[#ff7600] focus:bg-white focus:ring-4 focus:ring-orange-50 rounded-2xl py-5 pl-14 pr-6 text-xs font  outline-none transition-all"
                           value={formData.clinicName}
                           onChange={(e) => setFormData({...formData, clinicName: e.target.value, selectedClinicId: null})}
                       />
@@ -148,7 +149,7 @@ export default function RegisterPage() {
                               <Building2 size={16} className="text-[#ff7600]" />
                               <span className="text-sm font-semibold text-slate-700">{c.name}</span>
                             </div>
-                            <span className="text-[10px] font-bold text-[#ff7600] uppercase tracking-wider">Claim</span>
+                            <span className="text-[10px] font-bold text-[#ff7600] uppercase tracking-wider">Claim Facility</span>
                           </button>
                         ))}
                       </motion.div>
@@ -156,7 +157,7 @@ export default function RegisterPage() {
                   </AnimatePresence>
                 </div>
                 <button disabled={!canContinueStep1} onClick={() => setStep(2)} className="w-full bg-slate-900 text-white py-6 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[#ff7600] transition-all disabled:opacity-20">
-                  Continue <ArrowRight size={16} />
+                  Verify Practice <ArrowRight size={16} />
                 </button>
               </motion.div>
             )}

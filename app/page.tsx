@@ -85,7 +85,7 @@ export default function HomePage() {
                 V2.0 AI Integration Ready
               </motion.div>
 
-              <h1 className={`${poppins.className} font-extrabold tracking-tight text-[32px] leading-[1.1] sm:text-5xl md:text-5xl lg:text-6xl text-indigo-950`}>
+              <h1 className={`${poppins.className} font-extrabold tracking-tight text-[38px] leading-[1.1] sm:text-5xl md:text-5xl lg:text-6xl text-indigo-950`}>
                 {words.map((word, index) => (
                   <motion.span
                     key={index}
