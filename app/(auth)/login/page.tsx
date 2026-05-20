@@ -101,7 +101,7 @@ export default function PatientLoginPage() {
                   placeholder="e.g. tobby@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-100 focus:border-[#ff7600] rounded-2xl py-5 pl-14 pr-6 text-sm font-medium outline-none transition-all"
+                  className="w-full bg-slate-50 border border-slate-100 focus:border-[#ff7600] rounded-2xl py-5 pl-14 pr-6 text-xs font-medium outline-none transition-all"
                 />
               </div>
             </div>
@@ -168,7 +168,7 @@ export default function PatientLoginPage() {
           <p className="text-center mt-10 text-[11px] font-medium text-slate-400">
             New patient?{" "}
             <button 
-              onClick={() => router.push("/register/patient")}
+              onClick={() => router.push("/register")}
               className="text-slate-900 font-bold hover:text-[#ff7600] transition-colors"
             >
               Create an account

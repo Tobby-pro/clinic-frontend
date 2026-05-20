@@ -18,6 +18,11 @@ export default function Navbar() {
     setIsOpen(false);
   }, [pathname]);
 
+  // Helper utility to explicitly close the overlay drawer on click events
+  const closeMobileMenu = () => {
+    setIsOpen(false);
+  };
+
   const isInternalPage = 
     pathname.includes("/dashboard") || 
     pathname.includes("/login") || 
@@ -119,26 +124,31 @@ export default function Navbar() {
                 <Sparkles size={10} /> Intelligent Infrastructure
               </div>
               
+              {/* Added onClick={closeMobileMenu} to intercept hash anchor triggers seamlessly */}
               <Link 
                 href="/#features" 
+                onClick={closeMobileMenu}
                 className="text-2xl font-black text-indigo-950 hover:text-[#ff7600] transition-colors py-2 border-b border-slate-100/60"
               >
                 Features
               </Link>
               <Link 
                 href="/solutions" 
+                onClick={closeMobileMenu}
                 className="text-2xl font-black text-indigo-950 hover:text-[#ff7600] transition-colors py-2 border-b border-slate-100/60"
               >
                 Solutions
               </Link>
               <Link 
                 href="/pricing" 
+                onClick={closeMobileMenu}
                 className="text-2xl font-black text-indigo-950 hover:text-[#ff7600] transition-colors py-2 border-b border-slate-100/60"
               >
                 Pricing
               </Link>
               <Link 
                 href="/demo" 
+                onClick={closeMobileMenu}
                 className="text-2xl font-black text-[#ff7600] transition-colors py-2 flex items-center justify-between"
               >
                 Book Demo <ArrowRight size={20} />
@@ -149,12 +159,14 @@ export default function Navbar() {
             <div className="relative z-10 space-y-4 mt-8">
               <Link
                 href="/admin/login"
+                onClick={closeMobileMenu}
                 className="block w-full py-4 text-center rounded-2xl text-sm font-bold text-slate-800 bg-slate-50 border border-slate-100 transition-all active:scale-[0.98]"
               >
                 Sign In to Account
               </Link>
               <Link
                 href="/admin/register"
+                onClick={closeMobileMenu}
                 className="block w-full py-4 text-center rounded-2xl text-sm font-bold text-white bg-[#ff7600] hover:bg-[#e56b00] shadow-xl shadow-orange-500/20 transition-all active:scale-[0.98]"
               >
                 Get Started Free
