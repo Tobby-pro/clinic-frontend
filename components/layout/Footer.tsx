@@ -97,7 +97,7 @@ export default function Footer() {
                 <div className="p-2 rounded-lg bg-white/5 border border-white/10 group-hover:border-[#ff7600]/50 transition-colors">
                   <Mail size={16} className="text-[#ff7600]" />
                 </div>
-                <span className="text-sm">support@clinbox.com</span>
+                <span className="text-sm">support@clinbox.com.ng</span>
               </div>
             </div>
           </div>
