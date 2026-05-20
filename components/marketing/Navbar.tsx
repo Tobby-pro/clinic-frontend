@@ -12,13 +12,27 @@ import { Menu, X, ArrowRight, Sparkles } from "lucide-react";
 export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  // Automatically secure and close mobile menu if layout changes or window resizes
+  // Track window scroll coordinates to flip navbar theme states dynamically
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 80) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Automatically secure and close mobile menu if layout changes
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
 
-  // Helper utility to explicitly close the overlay drawer on click events
   const closeMobileMenu = () => {
     setIsOpen(false);
   };
@@ -35,13 +49,19 @@ export default function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 w-full z-[100]">
-      {/* THE SECRET LAYER: Glassmorphism Blur Backdrop */}
-      <div className="absolute inset-0 bg-white/10 backdrop-blur-2xl border-b border-white/20 shadow-[0_2px_20px_-10px_rgba(0,0,0,0.05)]" />
+    <header className="fixed top-0 left-0 right-0 w-full z-[100] transition-all duration-300">
+      {/* 🔮 DYNAMIC BACKGROUND: Shifts from light glassmorphism to dark solid luxury glass */}
+      <div 
+        className={`absolute inset-0 border-b transition-all duration-300 backdrop-blur-2xl ${
+          isScrolled 
+            ? "bg-slate-950/85 border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)]" 
+            : "bg-white/10 border-white/20 shadow-[0_2px_20px_-10px_rgba(0,0,0,0.05)]"
+        }`} 
+      />
       
       <div className="relative max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
 
-        {/* LOGO SECTION */}
+        {/* LOGO SECTION - Color turns crisp white via invert style filter when scrolled over dark regions */}
         <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-all active:scale-95 z-50">
           <Image 
             src="/images/clin_clinbox01.png"
@@ -49,12 +69,16 @@ export default function Navbar() {
             width={130} 
             height={36} 
             priority
-            className="object-contain w-[115px] h-auto md:w-[130px]"
+            className={`object-contain w-[115px] h-auto md:w-[130px] transition-all duration-300 ${
+              isScrolled ? "brightness-0 invert" : ""
+            }`}
           />
         </Link>
 
-        {/* DESKTOP NAV LINKS */}
-        <nav className="hidden md:flex items-center gap-10 text-[14px] font-medium text-slate-700/80">
+        {/* DESKTOP NAV LINKS - Text switches color states gracefully based on scroll timeline positions */}
+        <nav className={`hidden md:flex items-center gap-10 text-[14px] font-medium transition-colors duration-300 ${
+          isScrolled ? "text-slate-200" : "text-slate-700/80"
+        }`}>
           <Link href="/#features" className="hover:text-[#ff7600] transition-colors relative group">
             Features
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#ff7600] transition-all group-hover:w-full" />
@@ -67,7 +91,7 @@ export default function Navbar() {
             Pricing
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#ff7600] transition-all group-hover:w-full" />
           </Link>
-          <Link href="/demo" className="text-slate-900 hover:text-[#ff7600] transition-colors font-bold">
+          <Link href="/demo" className={`transition-colors font-bold ${isScrolled ? "text-white hover:text-[#ff7600]" : "text-slate-900 hover:text-[#ff7600]"}`}>
             Book Demo
           </Link>
         </nav>
@@ -76,7 +100,9 @@ export default function Navbar() {
         <div className="flex items-center gap-4 md:gap-6">
           <Link
             href="/admin/login"
-            className="hidden sm:block text-sm font-bold text-slate-800 hover:text-[#ff7600] transition-colors"
+            className={`hidden sm:block text-sm font-bold transition-colors duration-300 ${
+              isScrolled ? "text-slate-300 hover:text-[#ff7600]" : "text-slate-800 hover:text-[#ff7600]"
+            }`}
           >
             Sign In
           </Link>
@@ -97,7 +123,9 @@ export default function Navbar() {
           {/* MOBILE TRIGGER HAMBURGER BUTTON */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2 text-slate-800 hover:text-[#ff7600] transition-colors md:hidden z-50 relative"
+            className={`p-2 transition-colors md:hidden z-50 relative ${
+              isScrolled || isOpen ? "text-white hover:text-[#ff7600]" : "text-slate-800 hover:text-[#ff7600]"
+            }`}
             aria-label="Toggle navigation view"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -113,36 +141,35 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="absolute top-0 left-0 w-full min-h-screen bg-white/95 backdrop-blur-3xl z-40 border-b border-slate-100 px-6 pt-28 pb-10 flex flex-col justify-between md:hidden shadow-2xl"
+            className="absolute top-0 left-0 w-full min-h-screen bg-[#020617]/95 backdrop-blur-3xl z-40 border-b border-white/5 px-6 pt-28 pb-10 flex flex-col justify-between md:hidden shadow-2xl"
           >
-            {/* AMBIENT BACKGROUND LAYER DECORATION FOR BLUR DEPTH */}
-            <div className="absolute inset-0 z-0 opacity-[0.04] bg-[url('/images/grid.png')] pointer-events-none" />
+            {/* BACKGROUND LAYER DECORATION FOR BLUR DEPTH */}
+            <div className="absolute inset-0 z-0 opacity-[0.02] bg-[url('/images/grid.png')] pointer-events-none" />
             <div className="absolute top-[15%] right-[-10%] w-[300px] h-[300px] bg-[#ff7600]/10 blur-[60px] rounded-full pointer-events-none" />
 
             <div className="relative z-10 flex flex-col gap-6">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-100 text-[#ff7600] text-[9px] font-black uppercase tracking-widest w-max mb-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-[#ff7600] text-[9px] font-black uppercase tracking-widest w-max mb-2">
                 <Sparkles size={10} /> Intelligent Infrastructure
               </div>
               
-              {/* Added onClick={closeMobileMenu} to intercept hash anchor triggers seamlessly */}
               <Link 
                 href="/#features" 
                 onClick={closeMobileMenu}
-                className="text-2xl font-black text-indigo-950 hover:text-[#ff7600] transition-colors py-2 border-b border-slate-100/60"
+                className="text-2xl font-black text-white hover:text-[#ff7600] transition-colors py-2 border-b border-white/5"
               >
                 Features
               </Link>
               <Link 
                 href="/solutions" 
                 onClick={closeMobileMenu}
-                className="text-2xl font-black text-indigo-950 hover:text-[#ff7600] transition-colors py-2 border-b border-slate-100/60"
+                className="text-2xl font-black text-white hover:text-[#ff7600] transition-colors py-2 border-b border-white/5"
               >
                 Solutions
               </Link>
               <Link 
                 href="/pricing" 
                 onClick={closeMobileMenu}
-                className="text-2xl font-black text-indigo-950 hover:text-[#ff7600] transition-colors py-2 border-b border-slate-100/60"
+                className="text-2xl font-black text-white hover:text-[#ff7600] transition-colors py-2 border-b border-white/5"
               >
                 Pricing
               </Link>
@@ -160,7 +187,7 @@ export default function Navbar() {
               <Link
                 href="/admin/login"
                 onClick={closeMobileMenu}
-                className="block w-full py-4 text-center rounded-2xl text-sm font-bold text-slate-800 bg-slate-50 border border-slate-100 transition-all active:scale-[0.98]"
+                className="block w-full py-4 text-center rounded-2xl text-sm font-bold text-slate-300 bg-white/5 border border-white/10 transition-all active:scale-[0.98]"
               >
                 Sign In to Account
               </Link>
