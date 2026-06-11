@@ -135,7 +135,7 @@ function BookingFormContent() {
           <ChevronLeft size={14} /> Back
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Complete Booking</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Complete Booking</h1>
           <p className="text-sm text-gray-500 mt-1">Provide visit details to confirm your appointment.</p>
         </div>
       </header>

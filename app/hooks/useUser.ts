@@ -28,19 +28,29 @@ export default function useUser() {
   const [loading, setLoading] = useState(true);
 
   const fetchUser = useCallback(async () => {
+    // 🛠️ LOG TRACE CHECK: Drop silent return if executing mid-auth on client
+    if (typeof window !== "undefined" && window.location.pathname.includes("/register")) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("http://localhost:8000/me/", {
         credentials: "include", 
       });
 
+      // Quietly exit without shouting errors if the session cookie is unassigned
+      if (res.status === 401) {
+        setUser(null);
+        return;
+      }
+
       if (!res.ok) throw new Error("Not authenticated");
 
       const data = await res.json();
       
-      // Normalize clinic ID from all possible backend sources
       const actualId = data.clinicId || data.clinic_id || data.clinic?.id;
 
-      // HELPER: Strip "ClinicStatus." or "SubsStatus." and normalize to lowercase
       const cleanStatus = (s: any): string => {
         if (!s) return "idle";
         const str = String(s).toLowerCase();
@@ -62,7 +72,6 @@ export default function useUser() {
 
       const mappedUser: User = {
         ...data,
-        // Ensure name is always present regardless of 'full_name' or 'name' from DB
         name: data.name || data.full_name || "User",
         clinic_id: actualId,
         clinicId: actualId,
@@ -74,7 +83,8 @@ export default function useUser() {
 
       setUser(mappedUser);
     } catch (err) {
-      console.error("User fetch error:", err);
+      // Clean fallback layout log instead of a raw stack dump
+      console.warn("User dashboard session is currently unauthenticated.");
       setUser(null);
     } finally {
       setLoading(false);

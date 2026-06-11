@@ -1,7 +1,28 @@
 // services/api.ts
 
+
+
+
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+
+  /**
+ * =========================================================
+ * SLOT DTO (FRONTEND SINGLE SOURCE OF TRUTH)
+ * =========================================================
+ */
+export interface SlotDTO {
+  id: number;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+  formatted: {
+    time: string;
+    date: string;
+  };
+}
+
 
 /* =========================================================
    🏥 CLINIC ADMIN AUTH (STABLE - DO NOT CHANGE BACKEND CONTRACT)
@@ -259,6 +280,7 @@ export async function getAvailableSlots(doctorId: number, day: string) {
   console.log("Fetching slots:", url);
 
   const res = await fetch(url, { credentials: "include" });
+
   const data = await res.json();
 
   console.log("Slots response:", data);
@@ -268,12 +290,26 @@ export async function getAvailableSlots(doctorId: number, day: string) {
     throw new Error(data.detail || "Failed to fetch slots");
   }
 
-  // ✅ FIX: use correct key from backend (data.slots)
+  /**
+   * 🧠 NORMALIZATION LAYER (CRITICAL FIX)
+   * Ensures frontend ALWAYS receives SlotDTO shape
+   */
+  const slots: SlotDTO[] = (data.slots || []).map((slot: any) => ({
+    id: slot.id,
+    startTime: slot.startTime || slot.start_time || slot.start,
+    endTime: slot.endTime || slot.end_time || slot.end,
+    isAvailable: slot.isAvailable ?? true,
+    formatted: {
+      time: slot.formatted?.time || "",
+      date: slot.formatted?.date || "",
+    },
+  }));
+
   return {
     doctor_id: data.doctor_id,
     doctor_name: data.doctor_name,
     date: data.date,
-    slots: data.slots || [], // 🔥 THIS IS THE FIX
+    slots,
   };
 }
 /**
@@ -788,6 +824,7 @@ export async function getUnreadNotificationCount() {
       headers: { Accept: "application/json" },
     });
 
+    // 🛠️ Immediate silence on invalid cookie sessions
     if (res.status === 401 || res.status === 404) return 0;
 
     const data = await res.json();
@@ -795,8 +832,7 @@ export async function getUnreadNotificationCount() {
 
     return data.unread_count ?? 0;
   } catch (err) {
-    console.error("Network error fetching notification count:", err);
-    return 0;
+    return 0; // Quiet crash prevention
   }
 }
 
@@ -811,18 +847,14 @@ export async function getNotifications(limit: number = 20) {
       headers: { Accept: "application/json" },
     });
 
+    // 🛠️ Immediate silence on invalid cookie sessions
     if (res.status === 401 || res.status === 404) return [];
 
     const data = await res.json();
-
-    if (!res.ok) {
-      console.error("Fetch notifications error:", data);
-      return [];
-    }
+    if (!res.ok) return [];
 
     return data;
   } catch (err) {
-    console.error("Failed to fetch notifications:", err);
     return [];
   }
 }

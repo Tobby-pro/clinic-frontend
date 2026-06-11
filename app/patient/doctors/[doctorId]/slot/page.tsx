@@ -1,3 +1,5 @@
+// app/patient/appointments/book/page.tsx (or your file path)
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,18 +9,26 @@ import dayjs from "dayjs";
 import { getAvailableSlots, createAppointment } from "@/services/api";
 import { Clock, Calendar, Phone, CheckCircle, AlertCircle } from "lucide-react";
 
-interface Slot {
+/**
+ * ✅ Unified Slot DTO (matches API layer)
+ */
+interface SlotDTO {
   id: number;
-  start: string;
-  end: string;
+  startTime: string;
+  endTime: string;
+  isAvailable?: boolean;
+  formatted?: {
+    time: string;
+    date: string;
+  };
 }
 
 export default function PatientSlotBooking() {
   const { doctorId } = useParams();
   const router = useRouter();
 
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [slots, setSlots] = useState<SlotDTO[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<SlotDTO | null>(null);
   const [day, setDay] = useState<string>(dayjs().format("YYYY-MM-DD"));
 
   const [patientName, setPatientName] = useState<string>("");
@@ -69,7 +79,6 @@ export default function PatientSlotBooking() {
         reason: "General consultation",
       });
 
-      // Redirect to confirmation page (must create this page)
       router.push(`/patient/appointments/confirmed?slot=${selectedSlot.id}`);
     } catch (err: any) {
       console.error("Booking error:", err);
@@ -85,11 +94,12 @@ export default function PatientSlotBooking() {
       <div className="max-w-3xl mx-auto space-y-6">
         <h1 className="text-2xl font-bold mb-4">Book an Appointment</h1>
 
-        {/* STEP 1: Select Date */}
+        {/* STEP 1 */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
             <Calendar className="text-[#ff7600]" size={20} /> Select Date
           </h2>
+
           <input
             type="date"
             value={day}
@@ -99,7 +109,7 @@ export default function PatientSlotBooking() {
           />
         </motion.div>
 
-        {/* STEP 2: Select Slot */}
+        {/* STEP 2 */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
             <Clock className="text-[#ff7600]" size={20} /> Select Time
@@ -112,8 +122,15 @@ export default function PatientSlotBooking() {
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {slots.map((slot) => {
-                const time = new Date(slot.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                const time =
+                  slot.formatted?.time ||
+                  new Date(slot.startTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+
                 const isSelected = selectedSlot?.id === slot.id;
+
                 return (
                   <motion.button
                     key={slot.id}
@@ -133,12 +150,13 @@ export default function PatientSlotBooking() {
           )}
         </motion.div>
 
-        {/* STEP 3: Patient Info */}
+        {/* STEP 3 */}
         {selectedSlot && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
             <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
               <Phone className="text-[#ff7600]" size={20} /> Patient Details
             </h2>
+
             <input
               type="text"
               value={patientName}
@@ -146,6 +164,7 @@ export default function PatientSlotBooking() {
               placeholder="Enter full name"
               className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#ff7600]/20 outline-none text-sm sm:text-base"
             />
+
             <input
               type="tel"
               value={patientPhone}
@@ -156,7 +175,7 @@ export default function PatientSlotBooking() {
           </motion.div>
         )}
 
-        {/* CONFIRM BUTTON */}
+        {/* BUTTON */}
         {selectedSlot && (
           <button
             onClick={handleBooking}
@@ -171,7 +190,11 @@ export default function PatientSlotBooking() {
 
         {/* MESSAGE */}
         {message && (
-          <div className={`p-3 rounded-xl mt-4 flex items-center gap-2 text-sm ${isError ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"}`}>
+          <div
+            className={`p-3 rounded-xl mt-4 flex items-center gap-2 text-sm ${
+              isError ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"
+            }`}
+          >
             {isError ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
             {message}
           </div>

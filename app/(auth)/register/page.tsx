@@ -46,18 +46,25 @@ export default function PatientRegisterPage() {
       setIsError(false);
       setMessage("");
 
+      // 1. Create unverified profile on backend
       await registerPatient({
         full_name: formData.fullName,
         email: formData.email.toLowerCase().trim(),
         password: formData.pin,
       });
 
-      setStep(3);
-      setMessage("Verification code sent to your email.");
+      setMessage("Account profile initialized. Verification code dispatched to your email!");
+      setIsError(false);
+
+      // 2. Advance straight to Step 3 (Email Verification input screen)
+      setTimeout(() => {
+        setStep(3);
+        setMessage("");
+      }, 1500);
+
     } catch (err: any) {
       setIsError(true);
-      const errorMsg = err?.response?.data?.detail || "Registration failed. Try a different email.";
-      setMessage(errorMsg);
+      setMessage(err?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -67,31 +74,32 @@ export default function PatientRegisterPage() {
     try {
       setLoading(true);
       setIsError(false);
-      setMessage("Verifying code...");
+      setMessage("Validating security credentials...");
 
+      // 1. Fire verification code to update status on backend to active
       await verifyPatientEmail({
         email: formData.email.toLowerCase().trim(),
-        otp: String(otp).trim(),
-      } as any);
+        token: String(otp).trim(),
+      });
 
-      const loginRes = await loginPatient({
+      setMessage("Email verified successfully! Opening secure session...");
+
+      // 2. Safe to log in now that the verification block is lifted
+      await loginPatient({
         email: formData.email.toLowerCase().trim(),
         password: formData.pin,
       });
 
-      if (loginRes) {
-        setMessage("Success! Routing to patient portal...");
-        
-        setTimeout(() => {
-          router.push("/patient/dashboard"); 
-          router.refresh(); 
-        }, 1500);
-      }
+      setMessage("Authorized. Transferring to dashboard...");
+      
+      setTimeout(() => {
+        router.push("/patient/dashboard"); 
+      }, 1200);
 
     } catch (err: any) {
       setIsError(true);
       setMessage(
-        err?.response?.data?.detail || "Invalid code. Please check your email."
+        err?.message || "Invalid or expired verification code. Please check your inbox."
       );
     } finally {
       setLoading(false);
@@ -197,7 +205,7 @@ export default function PatientRegisterPage() {
                       disabled={formData.pin.length < 6 || loading}
                       className="flex-1 bg-slate-900 text-white py-6 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-[#ff7600] transition-all disabled:opacity-20"
                     >
-                      {loading ? "Creating..." : "Create Account"}
+                      {loading ? "Processing..." : "Register"}
                     </button>
                   </div>
                 </div>
