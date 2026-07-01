@@ -64,7 +64,7 @@ export default function Navbar() {
         {/* LOGO SECTION - Color turns crisp white via invert style filter when scrolled over dark regions */}
         <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-all active:scale-95 z-50">
           <Image 
-            src="/images/clinbox_two.png"
+            src="/images/Clinbox_two.png"
             alt="Clinbox Logo" 
             width={130} 
             height={36} 
