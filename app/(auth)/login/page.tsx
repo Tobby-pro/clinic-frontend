@@ -1,16 +1,16 @@
-// app/(auth)/login/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Poppins } from "next/font/google";
 import { 
-  Mail, 
+  Phone, 
   Lock, 
   ArrowRight, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  Loader2
 } from "lucide-react";
 
 import { loginPatient } from "@/services/api";
@@ -24,13 +24,25 @@ const poppins = Poppins({
 export default function PatientLoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState(""); 
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // 🩺 LOG 1: Track the exact state of 'phone' on every single render cycle
+  console.log("=== 🔍 RENDER CHECK ===");
+  console.log("Current phone state value:", phone);
+  console.log("Type of phone state:", typeof phone);
+
+  // 🩺 LOG 2: Catch if an external wrapper or redirect is modifying things on mount
+  useEffect(() => {
+    console.log("=== 🏁 COMPONENT MOUNTED ===");
+    console.log("Initial phone state on mount:", phone);
+  }, [phone]);
+
   const handleLogin = async () => {
+    console.log("=== 🚀 LOGIN BUTTON CLICKED ===");
     if (password.length < 6) {
       setIsError(true);
       setMessage("Please enter your full 6-digit PIN.");
@@ -42,28 +54,37 @@ export default function PatientLoginPage() {
       setIsError(false);
       setMessage("");
 
+      // Guarded locally to see if it makes it past this line
+      const cleanPhone = (phone || "").trim();
+      console.log("Cleaned phone payload ready for API:", cleanPhone);
+
       const response = await loginPatient({
-        email: email.toLowerCase().trim(),
+        login_id: cleanPhone,
         password: password,
-      });
+      } as any);
 
       if (response) {
         setMessage("Access granted. Loading your records...");
-        
+        router.refresh();
         setTimeout(() => {
-          router.push("/patient/dashboard");
-          router.refresh();
-        }, 1200);
+          window.location.href = "/patient/dashboard"; 
+        }, 1000);
       }
     } catch (err: any) {
       setIsError(true);
-      setMessage(err?.response?.data?.detail || "Invalid credentials. Please try again.");
+      setMessage(err?.message || "Invalid credentials. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const isFormValid = email.includes("@") && password.length === 6;
+  // 🩺 LOG 3: Safe evaluation checking to log values before return block execution
+  let isFormValid = false;
+  try {
+    isFormValid = (phone || "").length >= 7 && password.length === 6;
+  } catch (evalError: any) {
+    console.error("❌ CRASH DETECTED INSIDE ISFORMVALID EVALUATION:", evalError.message);
+  }
 
   return (
     <AuthLayoutWrapper>
@@ -89,18 +110,18 @@ export default function PatientLoginPage() {
           </div>
 
           <div className="space-y-6">
-            {/* Email Input */}
+            {/* Phone Input */}
             <div className="space-y-2">
               <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400 ml-2">
-                Registered Email
+                Registered Mobile Number
               </label>
               <div className="relative">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
-                  type="email"
-                  placeholder="e.g. tobby@gmail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="tel"
+                  placeholder="e.g. +234..."
+                  value={phone || ""}
+                  onChange={(e) => setPhone(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-100 focus:border-[#ff7600] rounded-2xl py-5 pl-14 pr-6 text-xs font-medium outline-none transition-all"
                 />
               </div>
@@ -140,7 +161,12 @@ export default function PatientLoginPage() {
               disabled={!isFormValid || loading}
               className="w-full bg-slate-900 text-white py-6 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-[#ff7600] transition-all disabled:opacity-20 mt-4 shadow-xl shadow-slate-100"
             >
-              {loading ? "Authenticating..." : (
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Authenticating...</span>
+                </div>
+              ) : (
                 <>
                   Secure Login <ArrowRight size={16} />
                 </>

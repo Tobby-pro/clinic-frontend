@@ -12,12 +12,13 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { logoutUser } from "@/services/api";
 import useUser from "@/app/hooks/useUser"; 
 import VerificationBadge from "@/components/dashboard/VerificationBadge"; 
 import NotificationBell from "@/components/NotificationBell";
 
+// 🛠️ PATH SYNCHRONIZATION: Normalized routes to maintain flawless single-page page transitions without blinking
 const adminNavItems = [
   { name: "Home", href: "/dashboard", icon: Home },
   { name: "Appts", href: "/dashboard/appointments", icon: Calendar },
@@ -66,7 +67,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* --- MOBILE TOP BAR (Synced with Patient Sidebar) --- */}
+      {/* --- MOBILE TOP BAR (UNTOUCHED) --- */}
       <header className="md:hidden fixed top-0 inset-x-0 h-14 bg-[#ff7600] flex items-center justify-between px-5 z-[110] shadow-md">
         <div className="flex items-center gap-2.5">
           <Image 
@@ -99,7 +100,7 @@ export default function Sidebar() {
         </div>
       </header>
 
-      {/* --- MOBILE BOTTOM NAVIGATION --- */}
+      {/* --- MOBILE BOTTOM NAVIGATION (UNTOUCHED) --- */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 h-20 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex items-center justify-around z-[100] px-2 pb-2">
         {adminNavItems.map((item) => (
           <Link key={item.name} href={item.href} className={`flex flex-col items-center flex-1 ${pathname === item.href ? "text-[#ff7600]" : "text-gray-400"}`}>
@@ -109,11 +110,20 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* --- DESKTOP SIDEBAR (Synced with Patient Sidebar) --- */}
+      {/* --- DESKTOP SIDEBAR --- */}
       <aside onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className={`hidden md:flex fixed top-0 left-0 z-40 h-screen flex-col bg-gradient-to-b from-[#ff7600] to-[#e56b00] text-white transition-all duration-300 ${isHovered ? "w-64" : "w-20"}`}>
         <div className="flex items-center h-20 px-5 border-b border-white/10 overflow-hidden shrink-0">
-          <div className="min-w-[40px] flex justify-center">
-             {!isHovered && <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#ff7600] font-black text-xl rotate-3">C</div>}
+          {/* 👑 BRANDING REPLACEMENT: Dropped your clean cross logo directly in place of the square "C" */}
+          <div className="min-w-[40px] flex justify-center items-center">
+             {!isHovered && (
+               <Image 
+                 src="/images/clinbox_logo98.png" 
+                 alt="Clinbox Logo" 
+                 width={32} 
+                 height={32} 
+                 className="object-contain"
+               />
+             )}
           </div>
           {isHovered && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ml-2 flex flex-col">

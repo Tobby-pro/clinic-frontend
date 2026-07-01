@@ -162,7 +162,7 @@ export default function PatientExperience() {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-slate-800 group-hover:text-[#ff7600] transition-colors">{item.title}</h3>
-                    <p className="text-slate-500 text-sm md:text-base leading-relaxed">{item.desc}</p>
+                    <p className="text-slate-500 text-sm md:text-sm leading-relaxed">{item.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -176,7 +176,7 @@ export default function PatientExperience() {
               className="mt-12 flex flex-col sm:flex-row items-center gap-4"
             >
               <Link 
-                href="/register" 
+                href="/login" 
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-slate-900 text-white px-10 py-5 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-[0_20px_40px_-10px_rgba(15,23,42,0.3)] active:scale-95 group"
               >
                 Book Your First Visit

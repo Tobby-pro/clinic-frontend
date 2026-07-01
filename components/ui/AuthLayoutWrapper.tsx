@@ -1,9 +1,7 @@
-// components/ui/AuthLayoutWrapper.tsx
-
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { ReactNode } from "react";
 
 interface AuthLayoutWrapperProps {
@@ -15,38 +13,29 @@ export default function AuthLayoutWrapper({
   children,
   showBackButton = true
 }: AuthLayoutWrapperProps) {
-
   const router = useRouter();
 
   return (
     <div className="relative w-full h-full">
-
-      {/* GLOBAL BACK BUTTON */}
+      {/* 👑 FIXED GLOBAL BACK BUTTON: Perfectly anchored at top-left across all screens */}
       {showBackButton && (
-        <button
-          onClick={() => router.back()}
-
-          /*
-            🔥 FIX:
-            changed z-50
-            TO z-[9999]
-
-            so button stays ABOVE everything
-          */
-
-          className="absolute left-6 top-6 p-3 bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-700 border border-slate-200/60 rounded-xl transition-all flex items-center justify-center shadow-sm hover:shadow active:scale-95 z-[9999] group"
-
-          title="Go back to previous page"
-        >
-          <ArrowLeft
-            size={16}
-            className="group-hover:-translate-x-0.5 transition-transform"
-          />
-        </button>
+        <div className="fixed top-6 left-6 md:top-10 md:left-10 z-[9999]">
+          <button
+            onClick={() => router.back()}
+            type="button"
+            className="group inline-flex h-9 items-center gap-2 rounded-xl border border-slate-100 bg-white pl-2.5 pr-3.5 text-xs font-bold text-slate-600 shadow-sm transition-all duration-200 hover:border-slate-300 hover:text-slate-900 active:scale-95"
+            title="Go back to previous page"
+          >
+            <ChevronLeft 
+              size={15} 
+              className="text-slate-400 transition-transform duration-200 group-hover:-translate-x-0.5 group-hover:text-slate-800" 
+            />
+            <span>Back</span>
+          </button>
+        </div>
       )}
 
       {children}
-
     </div>
   );
 }

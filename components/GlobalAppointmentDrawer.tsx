@@ -1,5 +1,3 @@
-// components/GlobalAppointmentDrawer.tsx
-
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,7 +5,7 @@ import { X, ShieldCheck, CheckCircle2, UserCheck, XCircle, ArrowUpRight, Message
 import { useAppointmentDrawer } from "@/app/store/useAppointmentDrawer";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { confirmAppointment } from "@/services/api";
+import { confirmAppointment, getCurrentUser } from "@/services/api"; 
 import { useAppointmentActions } from "@/app/hooks/useAppointmentActions";
 import { toast, Toaster } from "react-hot-toast";
 import Link from "next/link";
@@ -15,15 +13,17 @@ import Link from "next/link";
 export default function GlobalAppointmentDrawer() {
   const { selectedAppt, closeDrawer } = useAppointmentDrawer();
   const [isMounted, setIsMounted] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const pathname = usePathname();
 
   useEffect(() => { 
-    setIsMounted(true); 
+    setIsMounted(true);
+    getCurrentUser().then(user => {
+      if (user?.role) setUserRole(user.role.toLowerCase());
+    }).catch(() => null);
   }, []);
 
-  // FIXED LOGIC: Any path starting with /dashboard is an Admin view.
-  // This ensures buttons show on /dashboard/doctors, /dashboard/analytics, etc.
-  const isAdminView = pathname.startsWith("/dashboard");
+  const isAdminView = userRole === "admin" || pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
   
   const { handleCancel, handleComplete, isProcessing } = useAppointmentActions(() => {
     closeDrawer();
@@ -70,7 +70,7 @@ export default function GlobalAppointmentDrawer() {
                     <h3 className="text-2xl font-black mt-1 uppercase italic">
                       {isAdminView ? selectedAppt.patient_name : `Dr. ${selectedAppt.doctor_name}`}
                     </h3>
-                    {isAdminView && (
+                    {isAdminView && selectedAppt.patient_id && (
                       <Link 
                         href={`/dashboard/patient/${selectedAppt.patient_id}`} 
                         className="text-gray-400 text-[10px] font-bold uppercase tracking-tighter flex items-center gap-1 mt-4 hover:text-white transition-colors"
@@ -103,19 +103,22 @@ export default function GlobalAppointmentDrawer() {
                   <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">Status</p>
                     <div className="flex justify-center mt-1">
+                       {/* ✅ FIXED: Correctly handles the PENDING_VERIFICATION status styling */}
                        <span className={`font-black uppercase text-[10px] px-2 py-1 rounded-lg border ${
-                         selectedAppt.status === "BOOKED" ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-green-50 text-green-600 border-green-100"
+                         selectedAppt.status === "PENDING_VERIFICATION" ? "bg-orange-50 text-[#ff7600] border-orange-100" : 
+                         selectedAppt.status === "CONFIRMED" ? "bg-green-50 text-green-600 border-green-100" : "bg-blue-50 text-blue-600 border-blue-100"
                        }`}>
-                         {selectedAppt.status}
+                         {selectedAppt.status === "PENDING_VERIFICATION" ? "PENDING" : selectedAppt.status}
                        </span>
                     </div>
                   </div>
                 </div>
 
-                {/* ADMIN ACTIONS - Globalized for all /dashboard pages */}
+                {/* ADMIN ACTIONS */}
                 {isAdminView ? (
                   <div className="space-y-3 pt-4">
-                    {selectedAppt.status === "BOOKED" && (
+                    {/* ✅ FIXED: Button now perfectly checks for backend's enum key to render */}
+                    {selectedAppt.status === "PENDING_VERIFICATION" && (
                       <button 
                         disabled={isProcessing} 
                         onClick={async () => { 

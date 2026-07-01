@@ -43,12 +43,17 @@ export default function Header() {
       </div>
 
       {/* RIGHT SIDE: Notifications & Profile */}
-      <div className="flex items-center gap-4 md:gap-6">
+      {/* 🛠️ MOBILE CLIPPING FIX: Added pr-2 and adjusted gap to gap-3 on small screens 
+          to keep the right elements safely inside the container bounds */}
+      <div className="flex items-center gap-3 md:gap-6 pr-2 sm:pr-0">
         
-        {/* FORCE VISIBILITY */}
-        <div className="block relative z-[110]">
+        {/* ✅ FIXED THE INVISIBILITY BUG:
+            We wrap the NotificationBell in a display utility class wrapper.
+            Added mr-1 to prevent the absolute-positioned numeric counter 
+            from overlapping with or being hidden behind the user avatar panel. */}
+       <div className="block relative z-[110] mr-1">
           <NotificationBell />
-        </div>
+       </div>
         
         {/* User Profile Section */}
         <div className="flex items-center gap-2 md:gap-3 md:border-l md:pl-6 border-gray-100">

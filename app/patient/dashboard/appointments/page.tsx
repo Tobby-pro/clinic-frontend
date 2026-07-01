@@ -1,10 +1,9 @@
-// app/patient/dashboard/appointments/page.tsx
-
 "use client";
 
 import { useState, useEffect, Suspense } from "react"; 
 import { motion } from "framer-motion";
-import { Calendar, Clock, MessageSquare } from "lucide-react";
+import { Calendar, Clock, ArrowLeft } from "lucide-react"; // Added ArrowLeft icon
+import Link from "next/link"; // Added Link for routing
 import { getPatientUpcomingAppointments } from "@/services/api"; 
 import { useAppointmentDrawer } from "../../../store/useAppointmentDrawer";
 
@@ -22,9 +21,22 @@ function PatientAppointmentsContent() {
 
   return (
     <div className="max-w-[1000px] mx-auto p-6 space-y-8">
-      <header>
-        <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight italic">My Schedule</h1>
-        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Status: Pending & Confirmed</p>
+      
+      {/* HEADER WITH BACK BUTTON */}
+      <header className="space-y-3">
+        {/* Clean Back Button Row */}
+        <Link 
+          href="/patient/dashboard" 
+          className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase text-gray-400 tracking-wider hover:text-[#ff7600] transition-colors group"
+        >
+          <ArrowLeft size={12} className="transition-transform group-hover:-translate-x-0.5" /> 
+          <span>Back to Dashboard</span>
+        </Link>
+
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">My Schedule</h1>
+          <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Status: Pending & Confirmed</p>
+        </div>
       </header>
       
       <div className="grid gap-4">

@@ -1,19 +1,15 @@
-// app/components/patient/patientBookingForm.tsx
-
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import dayjs from "dayjs";
+import toast from "react-hot-toast";
 import { getDoctors, getDoctorsByClinic, getAvailableSlots, createAppointment } from "@/services/api";
 import useUser from "@/app/hooks/useUser";
 import { 
   User, 
-  CheckCircle2, 
-  AlertCircle, 
   ArrowRight,
-  Stethoscope,
   MessageSquare,
   ChevronLeft,
   Calendar
@@ -40,7 +36,7 @@ function BookingFormContent() {
   const { user } = useUser();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   
-  // ✅ Auto-select doctor from URL
+  // Auto-select doctor from URL
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(
     preSelectedDocId ? parseInt(preSelectedDocId) : null
   );
@@ -52,8 +48,6 @@ function BookingFormContent() {
 
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
-  const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     async function fetchDoctors() {
@@ -65,30 +59,45 @@ function BookingFormContent() {
         } else {
           data = await getDoctors();
         }
-        setDoctors(data);
+        setDoctors(data || []);
       } catch (err: any) {
-        handleUIError(err);
+        const detail = err?.response?.data?.detail || err?.message || "Failed to sync roster.";
+        toast.error(typeof detail === "string" ? detail : "Connection error");
       }
     }
     if (user || urlClinicId) fetchDoctors();
   }, [user, urlClinicId]);
 
+  // Cleanly sanitized date token logic targeting the correct endpoint schema
   useEffect(() => {
     if (!selectedDoctor || !day) return;
+    
     async function fetchSlots() {
       setLoadingSlots(true);
-      setMessage("");
       try {
-        const data = await getAvailableSlots(selectedDoctor as number, day);
-        const formattedSlots: Slot[] = (data.slots ?? []).map((slot: any) => ({
-          id: slot.id,
-          time: dayjs(slot.start).format("hh:mm A"),
-          is_booked: slot.is_booked,
-        }));
+        const targetedDayString = dayjs(day).format("YYYY-MM-DD");
+        const data = await getAvailableSlots(selectedDoctor as number, targetedDayString);
+        
+        const formattedSlots: Slot[] = (data.slots ?? []).map((slot: any) => {
+          const displayedTime = slot.formatted?.time 
+            ? slot.formatted.time 
+            : slot.start 
+              ? dayjs(slot.start).format("hh:mm A") 
+              : "Session Window";
+
+          return {
+            id: slot.id,
+            time: displayedTime,
+            is_booked: slot.is_booked ?? !(slot.isAvailable ?? slot.is_available ?? true),
+          };
+        });
+        
         setSlots(formattedSlots);
         setSelectedSlot(null);
       } catch (err: any) {
-        handleUIError(err);
+        const detail = err?.response?.data?.detail || err?.message || "Failed to load slots.";
+        toast.error(typeof detail === "string" ? detail : "Connection error");
+        setSlots([]);
       } finally {
         setLoadingSlots(false);
       }
@@ -96,31 +105,52 @@ function BookingFormContent() {
     fetchSlots();
   }, [selectedDoctor, day]);
 
-  const handleUIError = (err: any) => {
-    setIsError(true);
-    const detail = err?.response?.data?.detail || err?.message || "An error occurred";
-    setMessage(typeof detail === "string" ? detail : "Connection error");
-  };
-
   const handleSubmit = async () => {
-    if (!selectedSlot) return setMessage("Please select a time window.");
-    if (!reason.trim()) return setMessage("Please state your reason for visit.");
+    if (!selectedSlot) return toast.error("Please select a time window.");
+    if (!reason.trim()) return toast.error("Please state your reason for visit.");
 
-    try {
-      setLoadingSubmit(true);
-      setMessage("");
-      await createAppointment({
+    setLoadingSubmit(true);
+
+    // Using react-hot-toast promises for sleek asynchronous status states
+    toast.promise(
+      createAppointment({
         slot_id: selectedSlot.id,
-        reason: reason,
-      });
-      setMessage("Appointment Booked Successfully!");
-      setIsError(false);
-      setTimeout(() => router.push("/patient/dashboard"), 2000);
-    } catch (err: any) {
-      handleUIError(err);
-    } finally {
-      setLoadingSubmit(false);
-    }
+        reason: reason.trim(),
+      }),
+      {
+        loading: "Securing your appointment confirmation...",
+        success: () => {
+          setLoadingSubmit(false);
+          // Seamless non-blocking reroute sequence
+          setTimeout(() => router.push("/patient/dashboard"), 1000);
+          return "Appointment Booked Successfully! 🎉";
+        },
+        error: (err: any) => {
+          setLoadingSubmit(false);
+          const detail = err?.response?.data?.detail || err?.message || "An error occurred";
+          return typeof detail === "string" ? detail : "Booking failed";
+        }
+      },
+      {
+        style: {
+          minWidth: '280px',
+          borderRadius: '16px',
+          fontSize: '13px',
+          fontWeight: 'bold',
+          background: '#ffffff',
+          color: '#1e293b',
+          border: '1px solid #f1f5f9',
+          boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.05)'
+        },
+        success: {
+          duration: 4000,
+          iconTheme: {
+            primary: '#ff7600',
+            secondary: '#fff',
+          },
+        }
+      }
+    );
   };
 
   const inputStyles = "w-full px-4 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl focus:border-[#ff7600] focus:bg-white focus:ring-4 focus:ring-orange-500/5 text-sm text-gray-800 transition-all outline-none placeholder:text-gray-400 font-medium";
@@ -267,22 +297,6 @@ function BookingFormContent() {
           )}
         </AnimatePresence>
       </div>
-
-      <AnimatePresence>
-        {message && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className={`fixed bottom-10 right-4 md:right-10 flex items-center gap-4 p-5 rounded-2xl shadow-2xl border ${
-              isError ? "bg-red-50 border-red-100 text-red-600" : "bg-white border-green-100 text-green-600"
-            }`}
-          >
-            {isError ? <AlertCircle size={20} /> : <CheckCircle2 size={20} className="text-[#ff7600]" />}
-            <p className="text-xs font-bold uppercase tracking-tight">{message}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

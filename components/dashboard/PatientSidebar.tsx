@@ -13,14 +13,15 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { logoutUser } from "@/services/api";
 import NotificationBell from "@/components/NotificationBell";
-import useUser from "@/app/hooks/useUser"; // ✅ Import the hook
+import useUser from "@/app/hooks/useUser";
 
+// 🛠️ PATH SYNCHRONIZATION: Stripped mismatched slashes so Next.js handles all transitions instantly
 const patientNavItems = [
   { name: "Home", href: "/patient/dashboard", icon: LayoutDashboard },
-  { name: "Appts", href: "/patient/explore/", icon: CalendarDays },
+  { name: "Appts", href: "/patient/explore", icon: CalendarDays },
   { name: "Records", href: "/patient/records", icon: ClipboardList },
   { name: "Billing", href: "/patient/billing", icon: CreditCard }, 
   { name: "Profile", href: "/patient/dashboard/settings", icon: User },
@@ -32,7 +33,6 @@ export default function PatientSidebar() {
   const [isHovered, setIsHovered] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // ✅ Get user data from hook
   const { user, loading: userLoading } = useUser();
   const userName = user?.name ? user.name.split(" ")[0] : "Patient";
 
@@ -66,7 +66,7 @@ export default function PatientSidebar() {
 
   return (
     <>
-      {/* --- MOBILE TOP BAR --- */}
+      {/* --- MOBILE TOP BAR (UNTOUCHED) --- */}
       <header className="md:hidden fixed top-0 inset-x-0 h-14 bg-[#ff7600] flex items-center justify-between px-5 z-[110] shadow-md">
         <div className="flex items-center gap-2.5">
           <Image 
@@ -77,8 +77,6 @@ export default function PatientSidebar() {
             className="brightness-0 invert object-contain"
           />
           <span className="h-3 w-[1px] bg-white/30 ml-1" />
-          
-          {/* ✅ DYNAMIC NAME REPLACEMENT */}
           <span className="font-bold text-white text-[10px] uppercase tracking-widest opacity-90">
             {userLoading ? "..." : userName}
           </span>
@@ -97,7 +95,7 @@ export default function PatientSidebar() {
         </div>
       </header>
 
-      {/* --- MOBILE BOTTOM NAVIGATION --- */}
+      {/* --- MOBILE BOTTOM NAVIGATION (UNTOUCHED) --- */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex items-center justify-around z-[100] px-2 pb-2">
         {patientNavItems.slice(0, 2).map((item) => (
           <Link key={item.name} href={item.href} className={`flex flex-col items-center flex-1 ${pathname === item.href ? "text-[#ff7600]" : "text-gray-400"}`}>
@@ -117,8 +115,17 @@ export default function PatientSidebar() {
       {/* --- DESKTOP SIDEBAR --- */}
       <aside onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className={`hidden md:flex fixed top-0 left-0 z-40 h-screen flex-col bg-gradient-to-b from-[#ff7600] to-[#e56b00] text-white transition-all duration-300 ${isHovered ? "w-64" : "w-20"}`}>
         <div className="flex items-center h-20 px-5 border-b border-white/10 overflow-hidden shrink-0">
-          <div className="min-w-[40px] flex justify-center">
-             {!isHovered && <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#ff7600] font-black text-xl rotate-3">C</div>}
+          {/* 👑 BRANDING REPLACEMENT: Swapped the square "C" with your new standalone cross logo */}
+          <div className="min-w-[40px] flex justify-center items-center">
+             {!isHovered && (
+               <Image 
+                 src="/images/clinbox_logo98.png" 
+                 alt="Clinbox Logo" 
+                 width={32} 
+                 height={32} 
+                 className="object-contain"
+               />
+             )}
           </div>
           {isHovered && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ml-2 flex flex-col">

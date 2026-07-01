@@ -134,7 +134,7 @@ export default function PatientBookingForm() {
     <div className="max-w-4xl mx-auto space-y-8 pb-24 px-4 md:px-0">
       
       <header className="flex flex-col gap-1.5 mt-4">
-        <h1 className="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">
+        <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
           Book Consultation
         </h1>
         <div className="flex items-center gap-2">

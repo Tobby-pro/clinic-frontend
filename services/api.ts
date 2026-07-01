@@ -1,13 +1,9 @@
-// services/api.ts
-
-
-
+"use client";
 
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-
-  /**
+/**
  * =========================================================
  * SLOT DTO (FRONTEND SINGLE SOURCE OF TRUTH)
  * =========================================================
@@ -23,6 +19,18 @@ export interface SlotDTO {
   };
 }
 
+interface ActivatePortalPayload {
+  patient_id?: number;
+  clinic_id?: number;
+  phone?: string;
+  password?: string;
+}
+
+interface VerifyPhonePayload {
+  phone: string;
+  token?: string; // Component style
+  otp?: string;   // Backend style
+}
 
 /* =========================================================
    🏥 CLINIC ADMIN AUTH (STABLE - DO NOT CHANGE BACKEND CONTRACT)
@@ -109,12 +117,12 @@ export async function verifyAdminOTP(data: {
 
 /**
  * ---------------------------------------------------------
- * PATIENT SIGNUP (EMAIL + PASSWORD)
+ * PATIENT SIGNUP (PHONE + PASSWORD ✅)
  * ---------------------------------------------------------
  */
 export async function registerPatient(data: {
   full_name: string;
-  email: string;
+  phone: string;
   password: string;
 }) {
   const res = await fetch(`${API_URL}/patient/signup`, {
@@ -132,57 +140,6 @@ export async function registerPatient(data: {
 
   return json;
 }
-
-/**
- * ---------------------------------------------------------
- * PATIENT EMAIL VERIFICATION (OPTIONAL FLOW STEP)
- * ---------------------------------------------------------
- */
-export async function verifyPatientEmail(data: {
-  email: string;
-  token: string;
-}) {
-  const res = await fetch(`${API_URL}/patient/verify-email`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
-
-  const json = await res.json();
-
-  if (!res.ok) {
-    throw new Error(json.detail || "Email verification failed");
-  }
-
-  return json;
-}
-
-/**
- * ---------------------------------------------------------
- * PATIENT LOGIN
- * ---------------------------------------------------------
- */
-export async function loginPatient(data: {
-  email: string;
-  password: string;
-}) {
-  const res = await fetch(`${API_URL}/patient/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
-
-  const json = await res.json();
-
-  if (!res.ok) {
-    throw new Error(json.detail || "Login failed");
-  }
-
-  return json;
-}
-
 
 /**
  * ---------------------------------------------------------
@@ -209,7 +166,6 @@ export async function searchClinics(query: string) {
 
   return data;
 }
-
 
 /**
  * ---------------------------------------------------------
@@ -249,19 +205,15 @@ export async function getDashboardStats() {
 
 /**
  * ---------------------------------------------------------
- * FETCH DOCTORS (Global - Try removing the slash)
+ * FETCH DOCTORS
  * ---------------------------------------------------------
  */
 export async function getDoctors() {
   console.log("Fetching doctors...");
 
-  // Removed the trailing slash after "doctors"
   const res = await fetch(`${API_URL}/doctors`, { 
     credentials: "include",
   });
-
-  // If this still 404s, it means your backend REQUIRES a clinic ID.
-  // In that case, use getDoctorsByClinic(user.clinic_id) instead.
 
   const data = await res.json();
   if (!res.ok) {
@@ -290,10 +242,6 @@ export async function getAvailableSlots(doctorId: number, day: string) {
     throw new Error(data.detail || "Failed to fetch slots");
   }
 
-  /**
-   * 🧠 NORMALIZATION LAYER (CRITICAL FIX)
-   * Ensures frontend ALWAYS receives SlotDTO shape
-   */
   const slots: SlotDTO[] = (data.slots || []).map((slot: any) => ({
     id: slot.id,
     startTime: slot.startTime || slot.start_time || slot.start,
@@ -312,6 +260,7 @@ export async function getAvailableSlots(doctorId: number, day: string) {
     slots,
   };
 }
+
 /**
  * ---------------------------------------------------------
  * CREATE APPOINTMENT (SLOT-BASED ✅)
@@ -324,13 +273,7 @@ interface AppointmentPayload {
   patient_phone?: string;
 }
 
-/**
- * ---------------------------------------------------------
- * CREATE APPOINTMENT (Remove trailing slash here too)
- * ---------------------------------------------------------
- */
 export async function createAppointment(payload: AppointmentPayload) {
-  // Changed "/appointments/" to "/appointments"
   const res = await fetch(`${API_URL}/appointments`, {
     method: "POST",
     credentials: "include",
@@ -355,7 +298,7 @@ export async function createAppointment(payload: AppointmentPayload) {
 export async function createAppointmentAdmin(payload: {
   slot_id: number;
   patient_name: string;
-  patient_phone: string; // ✅ added
+  patient_phone: string;
   reason?: string;
 }) {
   const res = await fetch(`${API_URL}/appointments/admin`, {
@@ -376,6 +319,7 @@ export async function createAppointmentAdmin(payload: {
 
   return data;
 }
+
 /**
  * ---------------------------------------------------------
  * GET TODAY'S APPOINTMENTS
@@ -417,7 +361,6 @@ export async function getTodayAppointments() {
     status: appt.status,
   }));
 }
-
 
 /**
  * ---------------------------------------------------------
@@ -462,7 +405,6 @@ export async function createDoctor(data: { name: string; specialty: string }) {
   return json;
 }
 
-
 /**
  * ---------------------------------------------------------
  * FETCH DOCTORS BY CLINIC (Patient)
@@ -482,7 +424,6 @@ export async function getDoctorsByClinic(clinicId: number) {
 
   return data;
 }
-
 
 export async function createSlots(payload: {
   doctor_id: number;
@@ -510,7 +451,6 @@ export async function logoutUser() {
   const res = await fetch(`${API_URL}/auth/logout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    // 🚨 IMPORTANT: You must include credentials to send/receive cookies
     credentials: "include", 
   });
   if (!res.ok) throw new Error("Logout failed");
@@ -519,12 +459,12 @@ export async function logoutUser() {
 
 /**
  * ---------------------------------------------------------
- * FETCH CLINIC SETTINGS (Now matches the new GET route)
+ * FETCH CLINIC SETTINGS
  * ---------------------------------------------------------
  */
 export async function getClinicSettings(clinicId: number) {
   const res = await fetch(`${API_URL}/clinics/${clinicId}`, {
-    method: "GET", // Default is GET, but being explicit is fine
+    method: "GET",
     credentials: "include",
     headers: { 
       "Accept": "application/json" 
@@ -548,7 +488,7 @@ export async function getClinicSettings(clinicId: number) {
  */
 export async function updateClinicSettings(clinicId: number, data: any) {
   const res = await fetch(`${API_URL}/clinics/${clinicId}`, {
-    method: "PATCH",
+    method: "UPDATE",
     headers: {
       "Content-Type": "application/json",
     },
@@ -565,6 +505,7 @@ export async function updateClinicSettings(clinicId: number, data: any) {
 
   return json;
 }
+
 /**
  * ---------------------------------------------------------
  * GET PATIENT APPOINTMENTS
@@ -584,8 +525,6 @@ export async function getAppointments() {
 
   return data;
 }
-
-// services/api.ts
 
 export async function getAdminTodayAppointments() {
   const res = await fetch(`${API_URL}/appointments/admin/today`, {
@@ -614,7 +553,7 @@ export async function updateAppointmentStatus(appointmentId: number, status: str
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // Required for auth cookies
+    credentials: "include",
   });
 
   const json = await res.json();
@@ -632,10 +571,7 @@ export async function updateAppointmentStatus(appointmentId: number, status: str
  * CLINIC SUMMARY (For Dashboard Stats)
  * ---------------------------------------------------------
  */
-// services/api.ts
-
 export async function getClinicSummary() {
-  // Added /appointments/ to the path since it's in the appointments router
   const res = await fetch(`${API_URL}/appointments/summary`, { 
     credentials: "include",
     headers: { Accept: "application/json" },
@@ -650,7 +586,6 @@ export async function getClinicSummary() {
 
   return data; 
 }
-
 
 /**
  * ---------------------------------------------------------
@@ -715,15 +650,10 @@ export async function getPatientHistory(id: string | string[]) {
   return data;
 }
 
-
 /**
  * ---------------------------------------------------------
  * ADMIN COMPLIANCE & TRUST TERMINAL
  * ---------------------------------------------------------
- */
-
-/**
- * Fetches all clinic admins that are currently in 'PENDING' status.
  */
 export async function getPendingVerifications() {
   const res = await fetch(`${API_URL}/admin/compliance/pending`, {
@@ -741,9 +671,6 @@ export async function getPendingVerifications() {
   return data;
 }
 
-/**
- * Approves a clinic and sets status to VERIFIED (The Big Green Button)
- */
 export async function approveClinic(adminId: number) {
   const res = await fetch(`${API_URL}/admin/compliance/approve/${adminId}`, {
     method: "POST",
@@ -761,9 +688,6 @@ export async function approveClinic(adminId: number) {
   return data;
 }
 
-/**
- * Rejects a clinic verification request
- */
 export async function rejectClinic(adminId: number) {
   const res = await fetch(`${API_URL}/admin/compliance/reject/${adminId}`, {
     method: "POST",
@@ -805,146 +729,112 @@ export async function getNearbyClinics(lat: number, lng: number, limit: number =
   return data;
 }
 
+/* =========================================================
+   🔔 NOTIFICATIONS (CLEAN + BACKEND ALIGNED)
+   ========================================================= */
 
-
-/**
- * ---------------------------------------------------------
- * NOTIFICATIONS SYSTEM 🔔
- * ---------------------------------------------------------
- */
-
-/**
- * Fetches the count of unread notifications.
- * Added trailing slash and status safety to prevent 307/401 issues.
- */
 export async function getUnreadNotificationCount() {
   try {
-    const res = await fetch(`${API_URL}/notifications/unread-count/`, {
+    const res = await fetch(`${API_URL}/notifications/me/unread-count`, {
       credentials: "include",
       headers: { Accept: "application/json" },
     });
 
-    // 🛠️ Immediate silence on invalid cookie sessions
     if (res.status === 401 || res.status === 404) return 0;
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) return 0;
 
     return data.unread_count ?? 0;
-  } catch (err) {
-    return 0; // Quiet crash prevention
+  } catch {
+    return 0;
   }
 }
 
-/**
- * Fetches the latest notifications.
- * FIX: Added "/" before the "?" to match the backend router exactly.
- */
+
 export async function getNotifications(limit: number = 20) {
   try {
-    const res = await fetch(`${API_URL}/notifications/?limit=${limit}`, {
-      credentials: "include",
-      headers: { Accept: "application/json" },
-    });
+    const res = await fetch(
+      `${API_URL}/notifications/me?limit=${limit}`,
+      {
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      }
+    );
 
-    // 🛠️ Immediate silence on invalid cookie sessions
     if (res.status === 401 || res.status === 404) return [];
 
-    const data = await res.json();
+    const data = await res.json().catch(() => []);
     if (!res.ok) return [];
 
     return data;
-  } catch (err) {
+  } catch {
     return [];
   }
 }
 
-/**
- * Marks a specific notification as read
- */
+
 export async function markNotificationRead(notificationId: number) {
-  const res = await fetch(`${API_URL}/notifications/${notificationId}/read/`, {
-    method: "PATCH",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-  });
+  const res = await fetch(
+    `${API_URL}/notifications/me/${notificationId}/read`,
+    {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    }
+  );
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Failed to update notification");
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data.detail || "Failed to update notification");
+  }
+
   return data;
 }
 
-/**
- * Marks all notifications as read at once
- */
+
 export async function markAllNotificationsRead() {
-  const res = await fetch(`${API_URL}/notifications/mark-all-read/`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-  });
+  const res = await fetch(
+    `${API_URL}/notifications/me/mark-all-read`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    }
+  );
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Failed to clear notifications");
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data.detail || "Failed to clear notifications");
+  }
+
   return data;
 }
 
-
-
-
-/**
- * ---------------------------------------------------------
- * APPOINTMENT ACTIONS (Sleek Slide/Protocol System) 🏥
- * ---------------------------------------------------------
- */
-
-/**
- * Fetches a single appointment detail (UPDATED → utils route)
- */
 export async function getAppointmentById(id: string | number) {
   const res = await fetch(`${API_URL}/appointments/utils/detail/${id}`, {
     credentials: "include",
     headers: { Accept: "application/json" },
   });
-
   const data = await res.json();
-
-  if (!res.ok) {
-    console.error("Fetch appointment detail error:", data);
-    throw new Error(data.detail || "Failed to fetch appointment record");
-  }
-
+  if (!res.ok) throw new Error(data.detail || "Failed to fetch appointment record");
   return data;
 }
 
-/**
- * Approves a pending booking (UPDATED → utils route)
- */
 export async function confirmAppointment(id: string | number) {
   const res = await fetch(`${API_URL}/appointments/utils/detail/${id}/confirm`, {
     method: "PATCH",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
   });
-
   const data = await res.json();
-
-  if (!res.ok) {
-    console.error("Confirm appointment error:", data);
-    throw new Error(data.detail || "Failed to validate booking");
-  }
-
+  if (!res.ok) throw new Error(data.detail || "Failed to validate booking");
   return data;
 }
 
-/**
- * ⚠️ OPTIONAL: cancel route (ONLY if you implement it in utils)
- * If you don't have backend support yet, leave unused.
- */
-export async function cancelAppointment(
-  id: string | number,
-  reason: string = "Doctor unavailable"
-) {
+export async function cancelAppointment(id: string | number, reason: string = "Doctor unavailable") {
   const res = await fetch(
     `${API_URL}/appointments/utils/detail/${id}/cancel?reason=${encodeURIComponent(reason)}`,
     {
@@ -953,120 +843,51 @@ export async function cancelAppointment(
       headers: { "Content-Type": "application/json" },
     }
   );
-
   const data = await res.json();
-
-  if (!res.ok) {
-    console.error("Cancel appointment error:", data);
-    throw new Error(data.detail || "Failed to void record");
-  }
-
+  if (!res.ok) throw new Error(data.detail || "Failed to void record");
   return data;
 }
 
-
-/**
- * =========================================================
- * 🏥 SUBSCRIPTIONS & BILLING (CLINIC-OWNED SYSTEM)
- * =========================================================
- */
-
-
-/**
- * Fetch all available subscription plans
- */
 export async function getSubscriptionPlans() {
   const res = await fetch(`${API_URL}/subscriptions/plans`, {
     credentials: "include",
-    headers: { 
-      "Accept": "application/json",
-      "Content-Type": "application/json"
-    },
+    headers: { "Accept": "application/json", "Content-Type": "application/json" },
   });
-
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.detail || "Failed to fetch plans");
-
   return data;
 }
 
-/**
- * Clinic subscribes / upgrades plan
- */
 export async function subscribeClinicToPlan(tier: string) {
-  const res = await fetch(
-    `${API_URL}/subscriptions/subscribe/${tier}`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-    }
-  );
-
+  const res = await fetch(`${API_URL}/subscriptions/subscribe/${tier}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+  });
   const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    console.error("Subscription error:", data);
-    throw new Error(data.detail || "Subscription failed");
-  }
-
+  if (!res.ok) throw new Error(data.detail || "Subscription failed");
   return data;
 }
 
-/**
- * Fetch subscription for a clinic (PUBLIC MARKETPLACE VIEW)
- * This is what patients use to see plan info
- */
 export async function getClinicSubscription(clinicId: number) {
-  // Safety check to prevent broken URLs
-  if (!clinicId) {
-    console.warn("getClinicSubscription: clinicId is required");
-    return null;
-  }
-
-  const res = await fetch(
-    `${API_URL}/subscriptions/clinics/${clinicId}/subscription`,
-    {
-      method: "GET",
-      credentials: "include",
-      headers: { 
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-    }
-  );
-
+  if (!clinicId) return null;
+  const res = await fetch(`${API_URL}/subscriptions/clinics/${clinicId}/subscription`, {
+    method: "GET",
+    credentials: "include",
+    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+  });
   const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    console.error("Clinic subscription error:", data);
-    // We return null instead of throwing so the UI can fallback gracefully
-    return null; 
-  }
-
+  if (!res.ok) return null;
   return data;
 }
-/**
- * ---------------------------------------------------------
- * FETCH UPCOMING APPOINTMENTS (Patient)
- * ---------------------------------------------------------
- */
+
 export async function getPatientUpcomingAppointments() {
   const res = await fetch(`${API_URL}/appointments/upcoming`, {
     credentials: "include",
     headers: { Accept: "application/json" },
   });
-
   const data = await res.json();
-
-  if (!res.ok) {
-    console.error("Upcoming appointments error:", data);
-    throw new Error(data.detail || "Failed to fetch upcoming schedule");
-  }
-
+  if (!res.ok) throw new Error(data.detail || "Failed to fetch upcoming schedule");
   return data;
 }
 
@@ -1074,16 +895,114 @@ export async function getCurrentUser() {
   const res = await fetch(`${API_URL}/me/`, {
     method: "GET",
     credentials: "include",
-    headers: {
-      Accept: "application/json",
-    },
+    headers: { Accept: "application/json" },
   });
-
   if (res.status === 401) return null;
-
   const data = await res.json();
-
   if (!res.ok) return null;
-
   return data;
 }
+
+/**
+ * ---------------------------------------------------------
+ * PUBLIC PATIENT TRANSACTIONAL BOOKING (WIZARD FLOW ✅ - NO EMAIL)
+ * ---------------------------------------------------------
+ */
+export interface PublicBookingPayload {
+  clinic_id: number;
+  doctor_id: number;
+  slot_id: number;
+  full_name: string;
+  phone: string;
+  reason?: string;
+}
+
+export async function bookPublicAppointment(payload: PublicBookingPayload) {
+  const res = await fetch(`${API_URL}/public/book-appointment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Booking transaction declined.");
+  return data;
+}
+
+
+/* =========================================================
+   🔥 FIXED & REALIGNED ONBOARDING DISPATCHERS
+   ========================================================= */
+
+/**
+ * ---------------------------------------------------------
+ * ACTIVATE PORTAL / INIT CREDENTIALS
+ * ---------------------------------------------------------
+ */
+export async function activatePatientPortal(payload: ActivatePortalPayload) {
+  // ✅ Corrected route contract maps directly to your new activate-portal endpoint
+  const res = await fetch(`${API_URL}/public/activate-portal`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      patient_id: payload.patient_id,
+      password: payload.password
+    }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Failed to establish secure credentials.");
+  return data;
+}
+
+/**
+ * ---------------------------------------------------------
+ * VERIFY PHONE WITH OTP (BACKEND ALIGNED WITH FRONTEND COMPATIBILITY)
+ * ---------------------------------------------------------
+ */
+export async function verifyPatientPhone(payload: VerifyPhonePayload) {
+  const backendPayload = {
+    phone: payload.phone.trim(),
+    otp: (payload.otp || payload.token || "").trim()
+  };
+
+  const res = await fetch(`${API_URL}/public/verify-phone`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(backendPayload),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Invalid verification code.");
+  return data;
+}
+
+/**
+/*
+ * ---------------------------------------------------------
+/**
+ * PATIENT LOGIN SESSION DISPATCH (UNIFIED VERSION)
+ * ---------------------------------------------------------
+ */
+export async function loginPatient(payload: {
+  login_id: string; // ✅ Updated type signature to match unified backend standard
+  password: string;
+}) {
+  // Safe extraction helper: fallback to an empty string if login_id isn't present
+  const identifier = (payload.login_id || "").trim();
+
+  const res = await fetch(`${API_URL}/patient/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include", // 🔑 CRITICAL: Tells the browser to store the HttpOnly cookie
+    body: JSON.stringify({
+      login_id: identifier, // ✅ Safe, cleaned, and properly formatted string
+      password: payload.password
+    }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Authentication session failed.");
+  return data;
+}
+

@@ -1,0 +1,31 @@
+<svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wider, distinct layout gaps matching the reference in Clinbox_lg_6.png (Brand Orange) -->
+  <g fill="#ff7600">
+    <!-- Center Square Block -->
+    <rect x="214" y="214" width="72" height="72" />
+
+    <!-- Top Block (Pushed up to widen the gap) -->
+    <path d="M214 198h72v-50l-36-26-36 26v50z" />
+    
+    <!-- Right Block (Pushed right to widen the gap) -->
+    <path d="M302 214v72h50l26-36-26-36h-50z" />
+    
+    <!-- Bottom Block (Pushed down to widen the gap) -->
+    <path d="M286 302h-72v50l36 26 36-26v-50z" />
+    
+    <!-- Left Block (Pushed left to widen the gap) -->
+    <path d="M198 286v-72h-50l-26 38 26 38h50z" />
+  </g>
+
+  <!-- Clean clock hands centered exactly in the middle block (No circular ring) -->
+  <g stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Center pivot -->
+    <circle cx="250" cy="250" r="2.5" fill="#ffffff" />
+    
+    <!-- Hour Hand (Pointing directly to 3 o'clock) -->
+    <path d="M250 250l18 0" />
+    
+    <!-- Minute Hand (Pointing up to 12 o'clock) -->
+    <path d="M250 250l0 -22" />
+  </g>
+</svg>

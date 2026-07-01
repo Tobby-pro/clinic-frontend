@@ -1,27 +1,71 @@
 "use client";
 
-import { Plus, Activity, CalendarDays, Search, ArrowUpRight, HeartPulse } from "lucide-react";
+import { useEffect } from "react";
+import { Plus, CalendarDays, Search, ArrowUpRight, HeartPulse } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 import useUser from "@/app/hooks/useUser";
 
 import StatsCards from "./StatsCards"; 
 import UpcomingAppointment from "./UpcomingAppointment";
 import ClinicsPreview from "./ClinicsPreview";
 
+// 🎨 SHARED PREMIUM TOAST CONFIG
+const TOAST_STYLE_CONFIG = {
+  style: {
+    minWidth: '280px',
+    borderRadius: '16px',
+    fontSize: '13px',
+    fontWeight: 'bold',
+    background: '#ffffff',
+    color: '#1e293b',
+    border: '1px solid #f1f5f9',
+    boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.05)'
+  },
+  iconTheme: {
+    primary: '#ff7600',
+    secondary: '#fff',
+  },
+  duration: 4000,
+};
+
 export default function PatientDashboard() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading: userLoading } = useUser();
   const userName = user?.name ? user.name.split(" ")[0] : "Patient";
 
+  // ✨ MULTI-FLOW TOAST LISTENER
+  useEffect(() => {
+    const isBooked = searchParams.get("booked") === "true";
+    const isActivated = searchParams.get("activated") === "true";
+
+    if (isBooked) {
+      toast.success("Appointment secured successfully! Pending validation. ⏳", TOAST_STYLE_CONFIG);
+      cleanUrlQuery();
+    } else if (isActivated) {
+      toast.success("Identity authenticated! Portal access granted. 🔐", TOAST_STYLE_CONFIG);
+      cleanUrlQuery();
+    }
+  }, [searchParams]);
+
+  // Helper to cleanly strip query params without refreshing or breaking state
+  const cleanUrlQuery = () => {
+    const newUrl = window.location.pathname;
+    window.history.replaceState({ path: newUrl }, "", newUrl);
+  };
+
   return (
-    <div className="max-w-4xl mx-auto space-y-10 pb-24 px-2 md:px-0">
+    <div className="w-full space-y-8 md:space-y-10">
       
       {/* 1. HEADER SECTION */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mt-4 px-2 md:px-0">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mt-4">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[#ff7600] shadow-[0_0_8px_rgba(255,118,0,0.4)]" />
-            <p className="text-[10px] md:text-[11px] text-gray-400 font-bold uppercase tracking-[0.15em]">
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.15em]">
               Patient Portal
             </p>
           </div>
@@ -46,12 +90,12 @@ export default function PatientDashboard() {
       </header>
 
       {/* 2. STATS GRID */}
-      <section className="w-full px-2 md:px-0">
+      <section className="w-full">
         <StatsCards />
       </section>
 
       {/* 3. MAIN CONTENT GRID */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start px-2 md:px-0">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         <div className="lg:col-span-8 space-y-8">
           <div className="space-y-4">
@@ -60,8 +104,13 @@ export default function PatientDashboard() {
                 <CalendarDays className="text-[#ff7600]" size={14} />
                 Next Appointment
               </h2>
-              <Link href="/patient/appointments" className="text-[10px] font-bold text-[#ff7600] uppercase tracking-widest">
-                See All <ArrowUpRight size={12} />
+              
+              <Link 
+                href="/patient/dashboard/appointments" 
+                className="text-[10px] font-bold text-[#ff7600] uppercase tracking-widest inline-flex items-center gap-1 hover:underline"
+              >
+                <span>See All</span>
+                <ArrowUpRight size={12} />
               </Link>
             </div>
             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
@@ -92,8 +141,7 @@ export default function PatientDashboard() {
                   Complete your history to help doctors understand you better.
                 </p>
                 
-                {/* Fixed: Wrapped the button in a Link to go to settings */}
-                <Link href="/patient/dashboard/settings">
+                <Link href="/patient/dashboard/settings" className="block w-full">
                   <button className="w-full py-3.5 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-bold transition-all border border-white/10 uppercase tracking-widest">
                     Update Profile
                   </button>

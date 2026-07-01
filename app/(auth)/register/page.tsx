@@ -1,5 +1,3 @@
-// app/(patient)/register/page.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -8,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Poppins } from "next/font/google";
 import {
   User,
-  Mail,
+  Phone,
   Lock,
   ArrowRight,
   ArrowLeft,
@@ -17,7 +15,7 @@ import {
 
 import {
   registerPatient,
-  verifyPatientEmail,
+  verifyPatientPhone,
   loginPatient,
 } from "@/services/api";
 import AuthLayoutWrapper from "@/components/ui/AuthLayoutWrapper";
@@ -36,7 +34,7 @@ export default function PatientRegisterPage() {
   const [otp, setOtp] = useState("");
   const [formData, setFormData] = useState({
     fullName: "",
-    email: "",
+    phone: "",
     pin: "",
   });
 
@@ -46,17 +44,17 @@ export default function PatientRegisterPage() {
       setIsError(false);
       setMessage("");
 
-      // 1. Create unverified profile on backend
+      // 1. Create unverified profile on backend using phone number
       await registerPatient({
         full_name: formData.fullName,
-        email: formData.email.toLowerCase().trim(),
+        phone: formData.phone.trim(),
         password: formData.pin,
       });
 
-      setMessage("Account profile initialized. Verification code dispatched to your email!");
+      setMessage("Account profile initialized. Verification code dispatched via SMS!");
       setIsError(false);
 
-      // 2. Advance straight to Step 3 (Email Verification input screen)
+      // 2. Advance straight to Step 3 (SMS Verification input screen)
       setTimeout(() => {
         setStep(3);
         setMessage("");
@@ -76,17 +74,17 @@ export default function PatientRegisterPage() {
       setIsError(false);
       setMessage("Validating security credentials...");
 
-      // 1. Fire verification code to update status on backend to active
-      await verifyPatientEmail({
-        email: formData.email.toLowerCase().trim(),
-        token: String(otp).trim(),
+      // 🛠️ FIX APPLIED HERE: Changed payload key from 'token' to 'otp' to match your backend schema!
+      await verifyPatientPhone({
+        phone: formData.phone.trim(),
+        otp: String(otp).trim(),
       });
 
-      setMessage("Email verified successfully! Opening secure session...");
+      setMessage("Phone number verified successfully! Opening secure session...");
 
-      // 2. Safe to log in now that the verification block is lifted
+      // 2. Clear credentials and log directly into dashboard using the updated unified key
       await loginPatient({
-        email: formData.email.toLowerCase().trim(),
+        login_id: formData.phone.trim(), // ✅ Matches 'login_id' schema perfectly
         password: formData.pin,
       });
 
@@ -99,17 +97,14 @@ export default function PatientRegisterPage() {
     } catch (err: any) {
       setIsError(true);
       setMessage(
-        err?.message || "Invalid or expired verification code. Please check your inbox."
+        err?.message || "Invalid or expired verification code. Please check your SMS inbox."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const canContinueStep1 =
-    formData.fullName.length >= 2 &&
-    formData.email.includes("@") &&
-    formData.email.includes(".");
+  const canContinueStep1 = formData.fullName.length >= 2 && formData.phone.length >= 7;
 
   return (
     <AuthLayoutWrapper showBackButton={step === 1}>
@@ -151,12 +146,12 @@ export default function PatientRegisterPage() {
                     />
                   </div>
                   <div className="relative">
-                    <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
-                      type="email"
-                      placeholder="Email address"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      type="tel"
+                      placeholder="Mobile number"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full bg-slate-50 border border-slate-100 focus:border-[#ff7600] rounded-2xl py-5 pl-14 pr-6 text-sm font-medium outline-none transition-all"
                     />
                   </div>
@@ -218,8 +213,8 @@ export default function PatientRegisterPage() {
                   <div className="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-5">
                     <CheckCircle2 size={28} />
                   </div>
-                  <h1 className="text-2xl font-bold text-slate-900">Verify Email</h1>
-                  <p className="text-xs text-slate-400 mt-1">Enter code sent to <span className="font-bold text-slate-600">{formData.email}</span></p>
+                  <h1 className="text-2xl font-bold text-slate-900">Verify SMS Code</h1>
+                  <p className="text-xs text-slate-400 mt-1">Enter code sent to <span className="font-bold text-slate-600">{formData.phone}</span></p>
                 </div>
                 <div className="space-y-8">
                   <input

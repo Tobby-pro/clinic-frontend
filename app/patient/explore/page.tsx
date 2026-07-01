@@ -103,7 +103,9 @@ export default function ExploreClinicsPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-24 pt-6 px-4 md:px-6">
+    /* ✅ Fixed: Swapped max-w-6xl for full-width scaling and removed massive outer desktop margins */
+    <div className="w-full space-y-8 pb-24 pt-4 px-1 md:px-0">
+      
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -164,7 +166,7 @@ export default function ExploreClinicsPage() {
           </div>
         </div>
 
-        {/* CLINIC LIST - Removed max-w-2xl to allow full width scaling */}
+        {/* CLINIC LIST - Perfectly scaled wide canvas matching dashboard bounds */}
         <div className="lg:col-span-8">
           <div className="grid grid-cols-1 gap-4 w-full">
             <AnimatePresence mode="popLayout">
@@ -192,7 +194,7 @@ export default function ExploreClinicsPage() {
                         : "bg-white border-gray-100 hover:border-orange-200 hover:shadow-md"
                       }`}
                     >
-                      {/* Icon Container - Fixed shrink behavior */}
+                      {/* Icon Container */}
                       <div className={`p-3.5 md:p-4 rounded-2xl shrink-0 transition-all ${
                         isCorporate 
                         ? 'bg-white/10 text-[#ff7600]' 
@@ -201,7 +203,7 @@ export default function ExploreClinicsPage() {
                         <Hospital size={22} className="md:w-6 md:h-6" />
                       </div>
 
-                      {/* Content Section - min-w-0 is key for truncation */}
+                      {/* Content Section */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-1">
                           <h3 className={`font-black text-sm md:text-base truncate leading-tight ${
@@ -213,7 +215,6 @@ export default function ExploreClinicsPage() {
                         </div>
                         
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                          {/* Address with strict truncation for mobile */}
                           <div className="flex items-center gap-1 text-gray-400 text-[10px] font-bold uppercase tracking-tight min-w-0 max-w-[160px] xs:max-w-[220px] md:max-w-none">
                             <MapPin size={10} className="text-[#ff7600] shrink-0" />
                             <span className="truncate block">
@@ -229,7 +230,7 @@ export default function ExploreClinicsPage() {
                         </div>
                       </div>
 
-                      {/* Right Action Section - Pinned */}
+                      {/* Right Action Section */}
                       <div className="flex flex-col items-end gap-2 shrink-0 ml-2">
                         <div className="flex flex-col items-end gap-1">
                           <TierBadge tier={clinic.tier || "BASIC"} showIcon={false} />

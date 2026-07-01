@@ -74,7 +74,7 @@ export default function ClinicDoctorsPage() {
           <ChevronLeft size={14} /> Back to Discovery
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Select a Specialist</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Select a Specialist</h1>
           <p className="text-sm text-gray-500 mt-1">Available medical professionals at this facility.</p>
         </div>
       </header>
