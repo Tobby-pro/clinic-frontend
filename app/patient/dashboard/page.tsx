@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react"; // 👈 Added Suspense here
 import { Plus, CalendarDays, Search, ArrowUpRight, HeartPulse } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,7 +31,8 @@ const TOAST_STYLE_CONFIG = {
   duration: 4000,
 };
 
-export default function PatientDashboard() {
+// 1. THIS IS YOUR ACTUAL DASHBOARD COMPONENT
+function PatientDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: userLoading } = useUser();
@@ -151,5 +152,14 @@ export default function PatientDashboard() {
         </aside>
       </section>
     </div>
+  );
+}
+
+// 2. THE EXPORT WRAPPER THAT PLEASES VERCEL
+export default function PatientDashboard() {
+  return (
+    <Suspense fallback={<div className="p-8 text-xs text-gray-400">Loading your profile...</div>}>
+      <PatientDashboardContent />
+    </Suspense>
   );
 }
